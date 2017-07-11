@@ -91,6 +91,34 @@ class MyApp : public core::baseapp {
         return errs;
     }
 
+    unsigned int queueTests() {
+        meisterwerk::core::queue<int> qi(256);
+        int errs=0;
+        for (auto i=0; i<257; i++) {
+            int *pi=(int *)malloc(sizeof(int));
+            *pi=i;
+            if (!qi.push(pi)) {
+                if (i<256) ++errs;
+                else Serial.println("Failure-result writing beyond queue size, OK.");
+            } else {
+                if (i>=256) {
+                    ++errs;
+                    Serial.println("Pushing beyond queue-size successful! ERROR!");
+                }
+            }
+        }
+        for (auto i=0; i<256; i++) {
+            int *pi;
+            pi=qi.pop();
+            if (*pi != i) {
+                ++errs;
+                Serial.println("Queue pop resulted in corrupted content! ERROR!");
+            }
+            free(pi);
+        }
+        return errs;
+    }
+
     virtual void onSetup() {
         // Debug console
         Serial.begin( 115200 );
@@ -99,9 +127,14 @@ class MyApp : public core::baseapp {
         if (errs==0) {
             Serial.println("All tests OK!");
         } else {
-            Serial.println(String(errs)+" Tests failed.");
+            Serial.println(String(errs)+" errors, msgmatches tests failed.");
         }
-
+        errs=queueTests();
+        if (errs==0) {
+            Serial.println("Queue tests OK!");
+        } else {
+            Serial.println(String(errs)+" errors, queue tests failed.");
+        }
     }
 };
 
