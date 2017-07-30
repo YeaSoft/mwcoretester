@@ -17,8 +17,8 @@
 using namespace meisterwerk;
 
 typedef struct t_testcase {
-    String s1;
-    String s2;
+    String pub;
+    String sub;
     bool   groundTruth;
 } T_TESTCASE;
 
@@ -27,31 +27,31 @@ std::list<T_TESTCASE> tcs = {
     {"t1", "t1", true},
     {"t12", "t1", false},
     {"t1", "t13", false},
-    {"t1*", "t12", true},
-    {"t1*", "t1", true},
-    {"t1*", "t", false},
-    {"t1*", "", false},
+    {"t1", "t12", false},
+    {"t1", "t1/#", true},
+    {"t1", "t1/+", false},
+    {"t1/", "t1/#", true},
+    {"t1/", "t1/+", true},
+    {"t1", "t1/#", true},
 
-    {"t1/t3", "t2/t*", false},
-    {"t1*/t", "t1", false},
-    {"t12/*", "t1/234/234", false},
-    {"*/td", "t13/*", true},
-    {"t1*/234", "t12/234", true},
-    {"t1*/234", "t1/234", true},
-    {"t1*/234", "t1/2345", false},
-    {"t1*/*", "", false},
+    {"t1/t3", "t2/t#", false},
+    {"t1/t3", "t2/t+", false},
 
-    {"123/345/567", "*", true},
-    {"123/345/567", "*/*", true},
-    {"123/345/567", "*/*", true},
-    {"123/345/567", "*/*/*", true},
-    {"123/345/567", "*/*/*/a", false},
-    {"123/345/567", "*/34*/56*", true},
-    {"123/45/567", "*/34*/56*", false},
+    {"123/345/567", "#", true},
+    {"123/345/567", "+/#", true},
+    {"123/345/567", "+/+/+", true},
+    {"123/345/567", "+/+/#", true},
+    {"123/345/567", "+/+/+/#", true},
+    {"123/345/567", "+/+/+/a", false},
+    {"123/345/567", "+/345/567", true},
+    {"123/45/567", "+/34/567", false},
 
+    {"a", "+", true},
+    {"a", "#", true},
     {"", "", true},
-    {"*", "", true},
-    {"*", "1/2/3/4/5/", true},
+    {"a", "", false},
+    {"", "a", false},
+    {"", "#", false},
 
     {"abc/def/ghi", "abc/def/ghi", true},
     {"abc/def/ghi", "abc/def/ghi/", false},
@@ -70,24 +70,17 @@ class MyApp : public core::baseapp {
 
     unsigned int testcase( T_TESTCASE tc ) {
         int errs = 0;
-        if ( _app->sched.msgmatches( tc.s1, tc.s2 ) != tc.groundTruth ) {
-            Serial.println( tc.s1 + "<->" + tc.s2 + ", groundTruth=" + String( tc.groundTruth ) +
+        if ( core::Topic::mqttmatch( tc.pub, tc.sub ) != tc.groundTruth ) {
+            Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth ) +
                             ": ERROR." );
             ++errs;
         } else {
-            Serial.println( tc.s1 + "<->" + tc.s2 + ", groundTruth=" + String( tc.groundTruth ) +
-                            ": OK." );
-        }
-        if ( _app->sched.msgmatches( tc.s2, tc.s1 ) != tc.groundTruth ) {
-            Serial.println( tc.s2 + "<->" + tc.s1 + ", groundTruth=" + String( tc.groundTruth ) +
-                            ": ERROR." );
-            ++errs;
-        } else {
-            Serial.println( tc.s2 + "<->" + tc.s1 + ", groundTruth=" + String( tc.groundTruth ) +
+            Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth ) +
                             ": OK." );
         }
         return errs;
     }
+
     unsigned int testcases() {
         int errs = 0;
         for ( auto tc : tcs ) {
@@ -134,14 +127,16 @@ class MyApp : public core::baseapp {
         if ( errs == 0 ) {
             Serial.println( "All tests OK!" );
         } else {
-            Serial.println( String( errs ) + " errors, msgmatches tests failed." );
+            Serial.println( String( errs ) + " errors, mqttmatches tests failed." );
         }
+        /*
         errs = queueTests();
         if ( errs == 0 ) {
             Serial.println( "Queue tests OK!" );
         } else {
             Serial.println( String( errs ) + " errors, queue tests failed." );
         }
+        */
     }
 };
 
