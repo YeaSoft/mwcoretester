@@ -6,6 +6,7 @@
 
 // platform includes
 #include <ESP8266WiFi.h>
+//#include <Arduino.h>
 
 // Let MeisterWerk output debugs on Serial
 #define DEBUG 1
@@ -18,47 +19,47 @@ using namespace meisterwerk;
 typedef struct t_testcase {
     String s1;
     String s2;
-    bool groundTruth;
+    bool   groundTruth;
 } T_TESTCASE;
 
 std::list<T_TESTCASE> tcs = {
-    {"t1","t2",false},
-    {"t1","t1",true},
-    {"t12","t1",false},
-    {"t1","t13",false},
-    {"t1*","t12",true},
-    {"t1*","t1",true},
-    {"t1*","t",false},
-    {"t1*","",false},
+    {"t1", "t2", false},
+    {"t1", "t1", true},
+    {"t12", "t1", false},
+    {"t1", "t13", false},
+    {"t1*", "t12", true},
+    {"t1*", "t1", true},
+    {"t1*", "t", false},
+    {"t1*", "", false},
 
-    {"t1/t3","t2/t*",false},
-    {"t1*/t","t1",false},
-    {"t12/*","t1/234/234",false},
-    {"*/td","t13/*",true},
-    {"t1*/234","t12/234",true},
-    {"t1*/234","t1/234",true},
-    {"t1*/234","t1/2345",false},
-    {"t1*/*","",false},
+    {"t1/t3", "t2/t*", false},
+    {"t1*/t", "t1", false},
+    {"t12/*", "t1/234/234", false},
+    {"*/td", "t13/*", true},
+    {"t1*/234", "t12/234", true},
+    {"t1*/234", "t1/234", true},
+    {"t1*/234", "t1/2345", false},
+    {"t1*/*", "", false},
 
-    {"123/345/567","*",true},
-    {"123/345/567","*/*",true},
-    {"123/345/567","*/*",true},
-    {"123/345/567","*/*/*",true},
-    {"123/345/567","*/*/*/a",false},
-    {"123/345/567","*/34*/56*",true},
-    {"123/45/567","*/34*/56*",false},
+    {"123/345/567", "*", true},
+    {"123/345/567", "*/*", true},
+    {"123/345/567", "*/*", true},
+    {"123/345/567", "*/*/*", true},
+    {"123/345/567", "*/*/*/a", false},
+    {"123/345/567", "*/34*/56*", true},
+    {"123/45/567", "*/34*/56*", false},
 
-    {"","",true},
-    {"*","",true},
-    {"*","1/2/3/4/5/",true},
+    {"", "", true},
+    {"*", "", true},
+    {"*", "1/2/3/4/5/", true},
 
-    {"abc/def/ghi","abc/def/ghi",true},
-    {"abc/def/ghi","abc/def/ghi/",false},
-    {"abc/def/ghi","abc/def/gh",false},
-    {"abc/def/ghi","abc/df/ghi",false},
-    {"abc/def/ghi","ab/def/ghi",false},
-    {"abc/def/ghi","abc/def/ghj",false},
-    {"abc/def/ghi","abc/def/ghia",false},
+    {"abc/def/ghi", "abc/def/ghi", true},
+    {"abc/def/ghi", "abc/def/ghi/", false},
+    {"abc/def/ghi", "abc/def/gh", false},
+    {"abc/def/ghi", "abc/df/ghi", false},
+    {"abc/def/ghi", "ab/def/ghi", false},
+    {"abc/def/ghi", "abc/def/ghj", false},
+    {"abc/def/ghi", "abc/def/ghia", false},
 };
 
 // application class
@@ -67,73 +68,79 @@ class MyApp : public core::baseapp {
     MyApp() : core::baseapp( "MyApp" ) {
     }
 
-    unsigned int testcase(T_TESTCASE tc) {
-        int errs=0;
-        if (_app->sched.msgmatches(tc.s1, tc.s2) != tc.groundTruth) {
-            Serial.println(tc.s1+"<->"+tc.s2+", groundTruth="+String(tc.groundTruth)+": ERROR.");
+    unsigned int testcase( T_TESTCASE tc ) {
+        int errs = 0;
+        if ( _app->sched.msgmatches( tc.s1, tc.s2 ) != tc.groundTruth ) {
+            Serial.println( tc.s1 + "<->" + tc.s2 + ", groundTruth=" + String( tc.groundTruth ) +
+                            ": ERROR." );
             ++errs;
         } else {
-            Serial.println(tc.s1+"<->"+tc.s2+", groundTruth="+String(tc.groundTruth)+": OK.");
+            Serial.println( tc.s1 + "<->" + tc.s2 + ", groundTruth=" + String( tc.groundTruth ) +
+                            ": OK." );
         }
-        if (_app->sched.msgmatches(tc.s2, tc.s1) != tc.groundTruth) {
-            Serial.println(tc.s2+"<->"+tc.s1+", groundTruth="+String(tc.groundTruth)+": ERROR.");
+        if ( _app->sched.msgmatches( tc.s2, tc.s1 ) != tc.groundTruth ) {
+            Serial.println( tc.s2 + "<->" + tc.s1 + ", groundTruth=" + String( tc.groundTruth ) +
+                            ": ERROR." );
             ++errs;
         } else {
-            Serial.println(tc.s2+"<->"+tc.s1+", groundTruth="+String(tc.groundTruth)+": OK.");
+            Serial.println( tc.s2 + "<->" + tc.s1 + ", groundTruth=" + String( tc.groundTruth ) +
+                            ": OK." );
         }
         return errs;
     }
     unsigned int testcases() {
-        int errs=0;
-        for (auto tc : tcs) {
-            errs += testcase(tc);
+        int errs = 0;
+        for ( auto tc : tcs ) {
+            errs += testcase( tc );
         }
         return errs;
     }
 
     unsigned int queueTests() {
-        meisterwerk::core::queue<int> qi(256);
-        int errs=0;
-        for (auto i=0; i<257; i++) {
-            int *pi=(int *)malloc(sizeof(int));
-            *pi=i;
-            if (!qi.push(pi)) {
-                if (i<256) ++errs;
-                else Serial.println("Failure-result writing beyond queue size, OK.");
-            } else {
-                if (i>=256) {
+        meisterwerk::core::queue<int> qi( 256 );
+        int                           errs = 0;
+        for ( auto i = 0; i < 257; i++ ) {
+            int *pi = (int *)malloc( sizeof( int ) );
+            *pi     = i;
+            if ( !qi.push( pi ) ) {
+                if ( i < 256 )
                     ++errs;
-                    Serial.println("Pushing beyond queue-size successful! ERROR!");
+                else
+                    Serial.println( "Failure-result writing beyond queue size, OK." );
+            } else {
+                if ( i >= 256 ) {
+                    ++errs;
+                    Serial.println( "Pushing beyond queue-size successful! ERROR!" );
                 }
             }
         }
-        for (auto i=0; i<256; i++) {
+        for ( auto i = 0; i < 256; i++ ) {
             int *pi;
-            pi=qi.pop();
-            if (*pi != i) {
+            pi = qi.pop();
+            if ( *pi != i ) {
                 ++errs;
-                Serial.println("Queue pop resulted in corrupted content! ERROR!");
+                Serial.println( "Queue pop resulted in corrupted content! ERROR!" );
             }
-            free(pi);
+            free( pi );
         }
         return errs;
     }
 
-    virtual void onSetup() {
+    virtual void setup() override {
         // Debug console
         Serial.begin( 115200 );
-        Serial.println("\n\n\n");
-        int errs=testcases();
-        if (errs==0) {
-            Serial.println("All tests OK!");
+        Serial.println( "\n\n\n" );
+        int errs = testcases();
+        if ( errs == 0 ) {
+            Serial.println( "All tests OK!" );
         } else {
-            Serial.println(String(errs)+" errors, msgmatches tests failed.");
+            Serial.println( String( errs ) + " errors, msgmatches tests failed." );
         }
-        errs=queueTests();
-        if (errs==0) {
-            Serial.println("Queue tests OK!");
+        errs = queueTests();
+        if ( errs == 0 ) {
+            Serial.println( "Queue tests OK!" );
         } else {
-            Serial.println(String(errs)+" errors, queue tests failed.");
+            Serial.println( String( errs ) + " errors, queue tests failed." );
         }
     }
 };
