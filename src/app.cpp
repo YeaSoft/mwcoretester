@@ -12,7 +12,12 @@
 #define DEBUG 1
 
 // framework includes
+#include "util/debug.h"
+
+#include "core/array.h"
 #include <MeisterWerk.h>
+
+#include <util/dumper.h>
 
 using namespace meisterwerk;
 
@@ -22,7 +27,7 @@ typedef struct t_testcase {
     bool   groundTruth;
 } T_TESTCASE;
 
-std::list<T_TESTCASE> tcs = {
+T_TESTCASE tcs[] = {
     {"t1", "t2", false},
     {"t1", "t1", true},
     {"t12", "t1", false},
@@ -65,7 +70,9 @@ std::list<T_TESTCASE> tcs = {
 // application class
 class MyApp : public core::baseapp {
     public:
-    MyApp() : core::baseapp( "MyApp" ) {
+    // util::dumper dmp;
+    core::array<int> ar;
+    MyApp() : core::baseapp( "MyApp" ), ar( 10 ) /*, dmp( "dumper" )*/ {
     }
 
     unsigned int testcase( T_TESTCASE tc ) {
@@ -83,8 +90,8 @@ class MyApp : public core::baseapp {
 
     unsigned int testcases() {
         int errs = 0;
-        for ( auto tc : tcs ) {
-            errs += testcase( tc );
+        for ( int i = 0; i < sizeof( tcs ) / sizeof( T_TESTCASE ); i++ ) {
+            errs += testcase( tcs[i] );
         }
         return errs;
     }
@@ -119,6 +126,20 @@ class MyApp : public core::baseapp {
         return errs;
     }
 
+    void ArrayTests() {
+        Serial.println( "Testing array:" );
+        Serial.println( ar.length() );
+        Serial.println( "Starting loop:" );
+        for ( int i = 0; i < 10; i++ ) {
+            Serial.println( "Adding:" + String( i ) );
+            ar.add( i );
+            Serial.println( "added." );
+        }
+        Serial.println( "Getting ar[5]:" + String( ar[5] ) );
+        Serial.println( "Deleting 5, length:" );
+        ar.erase( 5 );
+        Serial.println( "Size now:" + String( ar.length() ) );
+    }
     virtual void setup() override {
         // Debug console
         Serial.begin( 115200 );
@@ -129,6 +150,8 @@ class MyApp : public core::baseapp {
         } else {
             Serial.println( String( errs ) + " errors, mqttmatches tests failed." );
         }
+
+        ArrayTests();
         /*
         errs = queueTests();
         if ( errs == 0 ) {
