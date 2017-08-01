@@ -5,9 +5,11 @@
 // internal LED
 
 // platform includes
-//#include <ESP8266WiFi.h>
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#else
 #include <Arduino.h>
-
+#endif
 // Let MeisterWerk output debugs on Serial
 #define DEBUG 1
 
@@ -92,7 +94,7 @@ class MyApp : public core::baseapp {
     */
     unsigned int testcases() {
         int errs = 0;
-        for ( int i = 0; i < sizeof( tcs ) / sizeof( T_TESTCASE ); i++ ) {
+        for ( unsigned int i = 0; i < sizeof( tcs ) / sizeof( T_TESTCASE ); i++ ) {
             //            errs += testcase( tcs[i] );
         }
         return errs;
@@ -132,7 +134,7 @@ class MyApp : public core::baseapp {
         Serial.println( "Testing array:" );
         Serial.println( ar.length() );
         Serial.println( "Starting loop:" );
-        for ( int i = 0; i < 10; i++ ) {
+        for ( unsigned int i = 0; i < 10; i++ ) {
             Serial.println( "Adding:" + String( i ) );
             ar.add( i );
             Serial.println( "added." );
