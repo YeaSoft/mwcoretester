@@ -5,8 +5,8 @@
 // internal LED
 
 // platform includes
-#include <ESP8266WiFi.h>
-//#include <Arduino.h>
+//#include <ESP8266WiFi.h>
+#include <Arduino.h>
 
 // Let MeisterWerk output debugs on Serial
 #define DEBUG 1
@@ -17,7 +17,7 @@
 #include "core/array.h"
 #include <MeisterWerk.h>
 
-#include <util/dumper.h>
+//#include <util/dumper.h>
 
 using namespace meisterwerk;
 
@@ -74,24 +74,26 @@ class MyApp : public core::baseapp {
     core::array<int> ar;
     MyApp() : core::baseapp( "MyApp" ), ar( 10 ) /*, dmp( "dumper" )*/ {
     }
-
-    unsigned int testcase( T_TESTCASE tc ) {
-        int errs = 0;
-        if ( core::Topic::mqttmatch( tc.pub, tc.sub ) != tc.groundTruth ) {
-            Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth ) +
-                            ": ERROR." );
-            ++errs;
-        } else {
-            Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth ) +
-                            ": OK." );
+    /*
+        unsigned int testcase( T_TESTCASE tc ) {
+            int errs = 0;
+            if ( core::Topic::mqttmatch( tc.pub, tc.sub ) != tc.groundTruth ) {
+                Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth
+       ) +
+                                ": ERROR." );
+                ++errs;
+            } else {
+                Serial.println( tc.pub + "<->" + tc.sub + ", groundTruth=" + String( tc.groundTruth
+       ) +
+                                ": OK." );
+            }
+            return errs;
         }
-        return errs;
-    }
-
+    */
     unsigned int testcases() {
         int errs = 0;
         for ( int i = 0; i < sizeof( tcs ) / sizeof( T_TESTCASE ); i++ ) {
-            errs += testcase( tcs[i] );
+            //            errs += testcase( tcs[i] );
         }
         return errs;
     }
@@ -144,13 +146,14 @@ class MyApp : public core::baseapp {
         // Debug console
         Serial.begin( 115200 );
         Serial.println( "\n\n\n" );
+        /*
         int errs = testcases();
         if ( errs == 0 ) {
             Serial.println( "All tests OK!" );
         } else {
             Serial.println( String( errs ) + " errors, mqttmatches tests failed." );
         }
-
+        */
         ArrayTests();
         /*
         errs = queueTests();
